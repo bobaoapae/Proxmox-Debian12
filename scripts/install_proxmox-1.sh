@@ -335,6 +335,113 @@ reboot_setup()
     systemctl reboot
 }
 
+configure_root_ssh() 
+{
+    if [ "$LANGUAGE" == "en" ]; then
+        echo -e "${cyan}Configuring root SSH access"
+        echo -e "Checking if root SSH login is enabled..."
+        echo -e "...${default}"
+    else
+        echo -e "${cyan}Configurando acesso SSH para o root"
+        echo -e "Verificando se o login SSH para root está habilitado..."
+        echo -e "...${default}"
+    fi
+
+    # Check if SSH is installed
+    if ! command -v sshd &> /dev/null; then
+        if [ "$LANGUAGE" == "en" ]; then
+            echo -e "${yellow}SSH server not found. Installing OpenSSH server...${default}"
+        else
+            echo -e "${yellow}Servidor SSH não encontrado. Instalando o servidor OpenSSH...${default}"
+        fi
+
+        if command -v nala &> /dev/null; then
+            nala install -y openssh-server
+        else
+            apt install -y openssh-server
+        fi
+    fi
+
+    # Check and modify the SSH configuration to allow root login
+    SSH_CONFIG="/etc/ssh/sshd_config"
+    
+    # Check if root login is permitted
+    if grep -q "^PermitRootLogin" "$SSH_CONFIG"; then
+        # Root login setting exists, update it
+        sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' "$SSH_CONFIG"
+        
+        if [ "$LANGUAGE" == "en" ]; then
+            echo -e "${green}Root SSH login enabled successfully.${default}"
+        else
+            echo -e "${green}Login SSH para root habilitado com sucesso.${default}"
+        fi
+    else
+        # No root login setting found, add it
+        echo "PermitRootLogin yes" >> "$SSH_CONFIG"
+        
+        if [ "$LANGUAGE" == "en" ]; then
+            echo -e "${green}Added root SSH login configuration.${default}"
+        else
+            echo -e "${green}Configuração de login SSH para root adicionada.${default}"
+        fi
+    fi
+
+    # Restart SSH service to apply changes
+    systemctl restart sshd
+
+    # Update root password
+    if [ "$LANGUAGE" == "en" ]; then
+        echo -e "${cyan}Updating root password"
+        echo -e "Please set a strong password for root user${default}"
+    else
+        echo -e "${cyan}Atualizando senha do root"
+        echo -e "Por favor, defina uma senha forte para o usuário root${default}"
+    fi
+
+    # Ask for new password
+    passwd_success=false
+    max_attempts=3
+    attempt=1
+
+    while [ $passwd_success = false ] && [ $attempt -le $max_attempts ]; do
+        if [ "$LANGUAGE" == "en" ]; then
+            echo -e "${yellow}Attempt $attempt of $max_attempts${default}"
+        else
+            echo -e "${yellow}Tentativa $attempt de $max_attempts${default}"
+        fi
+
+        if passwd root; then
+            passwd_success=true
+            
+            if [ "$LANGUAGE" == "en" ]; then
+                echo -e "${green}Root password updated successfully.${default}"
+            else
+                echo -e "${green}Senha do root atualizada com sucesso.${default}"
+            fi
+        else
+            attempt=$((attempt + 1))
+            
+            if [ "$LANGUAGE" == "en" ]; then
+                echo -e "${red}Failed to update password. Please try again.${default}"
+            else
+                echo -e "${red}Falha ao atualizar a senha. Por favor, tente novamente.${default}"
+            fi
+        fi
+    done
+
+    if [ $passwd_success = false ]; then
+        if [ "$LANGUAGE" == "en" ]; then
+            echo -e "${red}Failed to update root password after $max_attempts attempts.${default}"
+            echo -e "${yellow}You will need to update it manually later.${default}"
+        else
+            echo -e "${red}Falha ao atualizar a senha do root após $max_attempts tentativas.${default}"
+            echo -e "${yellow}Você precisará atualizá-la manualmente mais tarde.${default}"
+        fi
+    fi
+
+    echo -e "${cyan}...${default}"
+}
+
 main()
 {
     if [ "$LANGUAGE" == "en" ]; then
@@ -349,6 +456,7 @@ main()
 
     install_proxmox-2
     install_proxmox-3
+    configure_root_ssh
     reboot_setup
 }
 
