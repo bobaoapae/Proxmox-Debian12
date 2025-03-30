@@ -39,30 +39,6 @@ remove_start_script()
     done
 }
 
-# Start bridge configuration after reboot // Iniciar configuração da bridge após o reboot
-configure_bridge() 
-{
-    for user_home in /home/*; do
-        PROFILE_FILE="$user_home/.bashrc"
-
-        # Check if the profile file exists before adding
-        if [ -f "$PROFILE_FILE" ]; then
-            # Add the script execution line at the end of the file
-            echo -e "\n# Run script after login" >> "$PROFILE_FILE"
-            echo "/Proxmox-Debian12/scripts/configure_bridge.sh" >> "$PROFILE_FILE"
-
-            echo "Automatic configuration completed for user: $(basename "$user_home")."
-        fi
-    done
-
-    # Add the following lines at the end of the /root/.bashrc file
-    echo -e "\n# Run script after login" >> /root/.bashrc
-    echo "/Proxmox-Debian12/scripts/configure_bridge.sh" >> /root/.bashrc
-
-    echo "Automatic configuration completed for the root user."
-}
-
-
 proxmox-ve_packages()
 {
     if [ "$LANGUAGE" == "en" ]; then
@@ -148,7 +124,6 @@ main()
     fi
 
     remove_start_script
-    configure_bridge
 
     if [ "$LANGUAGE" == "en" ]; then
         echo -e "${red}WARNING: ${yellow}System automatically restarted to complete the installation..."

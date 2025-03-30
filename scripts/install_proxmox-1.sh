@@ -301,7 +301,7 @@ reboot_setup()
             # Add the script execution line at the end of the file
             echo "" >> "$PROFILE_FILE"
             echo "# Execute script after login" >> "$PROFILE_FILE"
-            echo "/Proxmox-Debian12/scripts/install_proxmox-2.sh" >> "$PROFILE_FILE"
+            echo "./Proxmox-Debian12/scripts/install_proxmox-2.sh" >> "$PROFILE_FILE"
             echo "" >> "$PROFILE_FILE"
 
             echo "Automatic configuration completed for user: $(basename "$user_home")."
@@ -311,7 +311,7 @@ reboot_setup()
     # Add the following lines at the end of the /root/.bashrc file
     echo "" >> /root/.bashrc
     echo "# Execute script after login" >> /root/.bashrc
-    echo "/Proxmox-Debian12/scripts/install_proxmox-2.sh" >> /root/.bashrc
+    echo "./Proxmox-Debian12/scripts/install_proxmox-2.sh" >> /root/.bashrc
     echo "" >> /root/.bashrc
 
     echo "Automatic configuration completed for the root user."
